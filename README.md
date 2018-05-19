@@ -9,6 +9,8 @@ If they all fail, an access point will be launched for you to fill in a new ssid
 
 Here's an example sketch:
 ```cpp
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 #include <WiFiPicker.h>
 
 WiFiPicker wifiPicker;
