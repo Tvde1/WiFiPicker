@@ -30,4 +30,4 @@ Yes, it is that easy!
 
 Also, here is a screenshot of the webpage.
 
-![](https://hailey.please-fuck.me/gwsmjp.png)
+![](https://ratelimited.me/gwsmjp.png)
