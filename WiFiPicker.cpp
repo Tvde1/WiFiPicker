@@ -9,7 +9,6 @@
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
-#include <memory>
 #include <map>
 
 const String beginHtml = "<!DOCTYPE html><html lang=\"en\"><head><title>AP Configure</title><style></style></head><body><table><tbody><tr><td><label for=\"ssid\">SSID</label></td><td><input id=\"ssid\"/></td></tr><tr><td><label for=\"pass\" >Password</label></td><td><input id=\"pass\" type=\"password\"/></td></tr><tr><td><button onclick=\"location.href = '/add?ssid=' + escape(document.getElementById('ssid').value) + '&pass=' + escape(document.getElementById('pass').value);\">Add</button></td></tr></tbody></table><br/><table><tbody>";
@@ -68,8 +67,8 @@ void WiFiPicker::readConfig() {
         String ssid = file.readStringUntil('\n');
         String pass = file.readStringUntil('\n');
 
-		ssid.remove(ssid.length() - 1);
-		pass.remove(pass.length() - 1);
+        ssid.remove(ssid.length() - 1);
+        pass.remove(pass.length() - 1);
 
         config[ssid] = pass;
     }
@@ -83,7 +82,7 @@ void WiFiPicker::writeConfig() {
     }
 }
 
-bool WiFiPicker::tryConnectToSsid(const char* ssid, const char* pass) {	
+bool WiFiPicker::tryConnectToSsid(const char* ssid, const char* pass) {
     WiFi.begin(ssid, pass);
 
     while (true) {
