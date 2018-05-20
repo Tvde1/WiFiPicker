@@ -1,4 +1,4 @@
-esp8266-wifi-picker
+WiFiPicker
 -
 
 This library makes it easy to dynamically add/remove saved WiFi access points.
