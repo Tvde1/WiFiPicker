@@ -39,7 +39,7 @@ WiFiPicker::WiFiPicker(String ssid, String pass) {
 }
 
 
-bool WiFiPicker::connect() {
+bool WiFiPicker::start() {
     bool willConnect = tryConnect();
 
     if (willConnect) {

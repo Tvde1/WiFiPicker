@@ -16,7 +16,7 @@ struct WiFiPicker {
         WiFiPicker();
         WiFiPicker(String ssid);
         WiFiPicker(String ssid, String pass);
-        bool connect();
+        bool start();
         void reset();
         void addSsid(String ssid);
         void addSsid(String ssid, String password);
