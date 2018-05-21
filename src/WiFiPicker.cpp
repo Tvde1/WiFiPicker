@@ -51,7 +51,7 @@ std::unique_ptr<ESP8266WebServer> server;
 void WiFiPicker::readConfig() {
     _ssids = std::map<String, String>();
 
-    File file = SPIFFS.open(configFile, "r");
+    File file = SPIFFS.open(WiFiPicker::configFile, "r");
     if (!file) {
         Serial.println("No config file found.");
         return;
@@ -69,7 +69,7 @@ void WiFiPicker::readConfig() {
 }
 
 void WiFiPicker::writeConfig() {
-    File file = SPIFFS.open(configFile, "w");
+    File file = SPIFFS.open(WiFiPicker::configFile, "w");
     for (auto const item : _ssids) {
         file.println(item.first);
         file.println(item.second);
@@ -177,7 +177,7 @@ void WiFiPicker::handleRoot() {
         middleHtml += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
     }
 
-    server->send(200, "text/html", beginHtml + "\n" + middleHtml + "\n" + endHtml);
+    server->send(200, "text/html", WiFiPicker::beginHtml + '\n' + middleHtml + '\n' + WiFiPicker::endHtml);
 }
 
 void WiFiPicker::handleAdd() {
