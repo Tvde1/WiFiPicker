@@ -50,8 +50,6 @@ bool WiFiPicker::start() {
     return false;
 }
 
-std::unique_ptr<ESP8266WebServer> server;
-
 void WiFiPicker::readConfig() {
     _ssids = std::map<String, String>();
 	

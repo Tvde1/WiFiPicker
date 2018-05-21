@@ -35,6 +35,7 @@ struct WiFiPicker {
         std::map<String, String> _ssids;
         void readConfig();
         void writeConfig();
+		std::unique_ptr<ESP8266WebServer> server;
 };
 
 #endif
