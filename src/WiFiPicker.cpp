@@ -70,6 +70,8 @@ void WiFiPicker::readConfig() {
 
         _ssids[ssid] = pass;
     }
+
+    file.close();
 }
 
 void WiFiPicker::writeConfig() {
@@ -78,6 +80,7 @@ void WiFiPicker::writeConfig() {
         file.println(item.first);
         file.println(item.second);
     }
+    file.close();
 }
 
 bool WiFiPicker::tryConnectToSsid(const char* ssid, const char* pass) {
@@ -135,7 +138,6 @@ bool WiFiPicker::tryConnect() {
 }
 
 void WiFiPicker::reset() {
-    SPIFFS.begin();
     SPIFFS.remove(configFile);
     _ssids = std::map<String, String>();
 }
