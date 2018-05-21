@@ -11,7 +11,7 @@
 #include <FS.h>
 #include <map>
 
-class WiFiPicker {
+struct WiFiPicker {
     public:
         WiFiPicker();
         WiFiPicker(String ssid);
@@ -35,6 +35,9 @@ class WiFiPicker {
         std::map<String, String> _ssids;
         void readConfig();
         void writeConfig();
+		String beginHtml;
+		String endHtml;
+		String configFile;
 };
 
 #endif
