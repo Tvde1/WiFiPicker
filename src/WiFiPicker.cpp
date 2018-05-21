@@ -147,8 +147,6 @@ bool WiFiPicker::redirectoToIp() {
         return false;
     }
 
-    //Serial.println("Redirected from: " + server->hostHeader());
-
     server->sendHeader("Location", "http://" + WiFi.softAPIP().toString(), true);
     server->send(302, "text/plain", "");
     server->client().stop();
@@ -197,6 +195,8 @@ void WiFiPicker::handleAdd() {
     Serial.println("SSID: " + ssid + " | PASS: " + pass);
 
     addSsid(ssid, pass);
+
+    delay(500);
 
     ESP.restart();
 }
