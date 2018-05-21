@@ -137,6 +137,7 @@ bool WiFiPicker::tryConnect() {
 void WiFiPicker::reset() {
     SPIFFS.begin();
     SPIFFS.remove(configFile);
+    _ssids = std::map<String, String>();
 }
 
 bool WiFiPicker::redirectoToIp() {
