@@ -11,6 +11,10 @@
 #include <DNSServer.h>
 #include <map>
 
+static const String beginHtml = "<!DOCTYPE html><html lang=\"en\"><head><title>AP Configure</title><style></style></head><body><table><tbody><tr><td><label for=\"ssid\">SSID</label></td><td><input id=\"ssid\"/></td></tr><tr><td><label for=\"pass\" >Password</label></td><td><input id=\"pass\" type=\"password\"/></td></tr><tr><td><button onclick=\"location.href = '/add?ssid=' + escape(document.getElementById('ssid').value) + '&pass=' + escape(document.getElementById('pass').value);\">Add</button></td></tr></tbody></table><br/><table><tbody>";
+static const String endHtml = "</tbody></table></body></html>";
+static const String configFile = "/WiFiPicker";
+
 void WiFiPicker::init(String ssid, String pass) {
     WiFi.softAPdisconnect(true);
     WiFi.setAutoConnect(false);
@@ -50,8 +54,8 @@ std::unique_ptr<ESP8266WebServer> server;
 
 void WiFiPicker::readConfig() {
     _ssids = std::map<String, String>();
-
-    File file = SPIFFS.open(WiFiPicker::configFile, "r");
+	
+    File file = SPIFFS.open(configFile.c_str(), "r");
     if (!file) {
         Serial.println("No config file found.");
         return;
@@ -64,12 +68,12 @@ void WiFiPicker::readConfig() {
         ssid.remove(ssid.length() - 1);
         pass.remove(pass.length() - 1);
 
-		_ssids[ssid] = pass;
+        _ssids[ssid] = pass;
     }
 }
 
 void WiFiPicker::writeConfig() {
-    File file = SPIFFS.open(WiFiPicker::configFile, "w");
+    File file = SPIFFS.open(configFile.c_str(), "w");
     for (auto const item : _ssids) {
         file.println(item.first);
         file.println(item.second);
@@ -132,7 +136,7 @@ bool WiFiPicker::tryConnect() {
 
 void WiFiPicker::reset() {
     SPIFFS.begin();
-    SPIFFS.remove("/ssids");
+    SPIFFS.remove(configFile);
 }
 
 bool WiFiPicker::redirectoToIp() {
@@ -172,12 +176,14 @@ void WiFiPicker::handleRoot() {
         return;
     }
 
-    String middleHtml = "";
+    String result = beginHtml;
     for (auto const item : _ssids) {
-        middleHtml += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
+        result += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
     }
 
-    server->send(200, "text/html", WiFiPicker::beginHtml + '\n' + middleHtml + '\n' + WiFiPicker::endHtml);
+    result += endHtml;
+
+    server->send(200, "text/html", result);
 }
 
 void WiFiPicker::handleAdd() {
