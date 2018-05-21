@@ -35,9 +35,9 @@ struct WiFiPicker {
         std::map<String, String> _ssids;
         void readConfig();
         void writeConfig();
-		String beginHtml;
-		String endHtml;
-		String configFile;
+        static constexpr char* beginHtml = "<!DOCTYPE html><html lang=\"en\"><head><title>AP Configure</title><style></style></head><body><table><tbody><tr><td><label for=\"ssid\">SSID</label></td><td><input id=\"ssid\"/></td></tr><tr><td><label for=\"pass\" >Password</label></td><td><input id=\"pass\" type=\"password\"/></td></tr><tr><td><button onclick=\"location.href = '/add?ssid=' + escape(document.getElementById('ssid').value) + '&pass=' + escape(document.getElementById('pass').value);\">Add</button></td></tr></tbody></table><br/><table><tbody>";;
+        static constexpr char* endHtml = "</tbody></table></body></html>";
+        static constexpr char* configFile = "/WiFiPicker";
 };
 
 #endif
