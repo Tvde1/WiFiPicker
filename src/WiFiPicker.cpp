@@ -15,7 +15,6 @@ const String beginHtml = "<!DOCTYPE html><html lang=\"en\"><head><title>AP Confi
 const String endHtml = "</tbody></table></body></html>";
 
 const char* configFile = "/ssids";
-std::map<String, String> config;
 
 void WiFiPicker::init(String ssid, String pass) {
     WiFi.softAPdisconnect(true);
@@ -55,7 +54,7 @@ bool WiFiPicker::connect() {
 std::unique_ptr<ESP8266WebServer> server;
 
 void WiFiPicker::readConfig() {
-    config = std::map<String, String>();
+    _ssids = std::map<String, String>();
 
     File file = SPIFFS.open(configFile, "r");
     if (!file) {
@@ -70,13 +69,13 @@ void WiFiPicker::readConfig() {
         ssid.remove(ssid.length() - 1);
         pass.remove(pass.length() - 1);
 
-        config[ssid] = pass;
+		_ssids[ssid] = pass;
     }
 }
 
 void WiFiPicker::writeConfig() {
     File file = SPIFFS.open(configFile, "w");
-    for (auto const item : config) {
+    for (auto const item : _ssids) {
         file.println(item.first);
         file.println(item.second);
     }
@@ -123,7 +122,7 @@ bool WiFiPicker::tryConnectToSsid(const char* ssid, const char* pass) {
 bool WiFiPicker::tryConnect() {
     readConfig();
 
-    for (auto const item : config) {
+    for (auto const item : _ssids) {
         String ssid = item.first;
         String pass = item.second;
         Serial.println("Trying \"" + ssid + "\" : \"" + pass + "\"");
@@ -159,14 +158,14 @@ void WiFiPicker::addSsid(String ssid) {
 }
 
 void WiFiPicker::addSsid(String ssid, String pass) {
-    config[ssid] = pass;
+	_ssids[ssid] = pass;
     writeConfig();
 }
 
 void WiFiPicker::removeSsid(String ssid, String password) {
-    for (std::map<String, String>::iterator it = config.begin(); it != config.end(); it++) {
+    for (std::map<String, String>::iterator it = _ssids.begin(); it != _ssids.end(); it++) {
         if (it->first == ssid && it->second == password) {
-            config.erase(it);
+			_ssids.erase(it);
             writeConfig();
             return;
         }
@@ -179,7 +178,7 @@ void WiFiPicker::handleRoot() {
     }
 
     String middleHtml = "";
-    for (auto const item : config) {
+    for (auto const item : _ssids) {
         middleHtml += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
     }
 
