@@ -15,32 +15,37 @@ static const String beginHtml = "<!DOCTYPE html><html lang=\"en\"><head><title>A
 static const String endHtml = "</tbody></table></body></html>";
 static const String configFile = "/WiFiPicker";
 
-void WiFiPicker::init(String ssid, String pass) {
+void WiFiPicker::init(String ssid, String pass, bool hidden) {
     WiFi.softAPdisconnect(true);
     WiFi.setAutoConnect(false);
 
     _ssid = ssid != "" ? ssid : "ESP" + String(ESP.getChipId());
     _pass = pass;
+	_hidden = hidden;
 
     SPIFFS.begin();
 }
 
 WiFiPicker::WiFiPicker()
 {
-    init("", "");
+    init("", "", false);
 }
 
 WiFiPicker::WiFiPicker(String ssid) {
-    init(ssid, "");
+    init(ssid, "", false);
 }
 
 WiFiPicker::WiFiPicker(String ssid, String pass) {
-    init(ssid, pass);
+	init(ssid, pass, false);
+}
+
+WiFiPicker::WiFiPicker(String ssid, String pass, bool hidden) {
+	init(ssid, pass, hidden);
 }
 
 
 bool WiFiPicker::start() {
-    bool willConnect = tryConnect();
+	bool willConnect = tryConnect();
 
     if (willConnect) {
         return true;
@@ -218,7 +223,7 @@ void WiFiPicker::createAP() {
         WiFi.softAP(_ssid.c_str());
     }
     else {
-        WiFi.softAP(_ssid.c_str(), _pass.c_str());
+        WiFi.softAP(_ssid.c_str(), _pass.c_str(), 1, _hidden);
     }
 
     IPAddress myIP = WiFi.softAPIP();
