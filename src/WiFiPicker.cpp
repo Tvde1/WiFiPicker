@@ -16,23 +16,28 @@ static const String endHtml = "</tbody></table></body></html>";
 static const String configFile = "/WiFiPicker";
 
 void WiFiPicker::init(String ssid, String pass, bool hidden) {
-    WiFi.softAPdisconnect(true);
-    WiFi.setAutoConnect(false);
+	if (pass != "" && pass.length() < 8) {
+		Serial.println("Warning. You have to use a password of 8 or more characters.");
+		pass = "8characters";
+	}
 
-    _ssid = ssid != "" ? ssid : "ESP" + String(ESP.getChipId());
-    _pass = pass;
+	WiFi.softAPdisconnect(true);
+	WiFi.setAutoConnect(false);
+
+	_ssid = ssid != "" ? ssid : "ESP" + String(ESP.getChipId());
+	_pass = pass;
 	_hidden = hidden;
 
-    SPIFFS.begin();
+	SPIFFS.begin();
 }
 
 WiFiPicker::WiFiPicker()
 {
-    init("", "", false);
+	init("", "", false);
 }
 
 WiFiPicker::WiFiPicker(String ssid) {
-    init(ssid, "", false);
+	init(ssid, "", false);
 }
 
 WiFiPicker::WiFiPicker(String ssid, String pass) {
@@ -45,202 +50,206 @@ WiFiPicker::WiFiPicker(String ssid, String pass, bool hidden) {
 
 
 bool WiFiPicker::start() {
+	if (_pass == "8characters") {
+		Serial.println("Your password has been changed to: \"" + _pass + "\" because it is less than 8 characters long.");
+	}
+
 	bool willConnect = tryConnect();
 
-    if (willConnect) {
-        return true;
-    }
+	if (willConnect) {
+		return true;
+	}
 
-    createAP();
-    return false;
+	createAP();
+	return false;
 }
 
 void WiFiPicker::readConfig() {
-    _ssids = std::map<String, String>();
-	
-    File file = SPIFFS.open(configFile.c_str(), "r");
-    if (!file) {
-        Serial.println("No config file found.");
-        return;
-    }
+	_ssids = std::map<String, String>();
 
-    while (file.available() > 0) {
-        String ssid = file.readStringUntil('\n');
-        String pass = file.readStringUntil('\n');
+	File file = SPIFFS.open(configFile.c_str(), "r");
+	if (!file) {
+		Serial.println("No config file found.");
+		return;
+	}
 
-        ssid.remove(ssid.length() - 1);
-        pass.remove(pass.length() - 1);
+	while (file.available() > 0) {
+		String ssid = file.readStringUntil('\n');
+		String pass = file.readStringUntil('\n');
 
-        _ssids[ssid] = pass;
-    }
+		ssid.remove(ssid.length() - 1);
+		pass.remove(pass.length() - 1);
 
-    file.close();
+		_ssids[ssid] = pass;
+	}
+
+	file.close();
 }
 
 void WiFiPicker::writeConfig() {
-    File file = SPIFFS.open(configFile.c_str(), "w");
-    for (auto const item : _ssids) {
-        file.println(item.first);
-        file.println(item.second);
-    }
-    file.close();
+	File file = SPIFFS.open(configFile.c_str(), "w");
+	for (auto const item : _ssids) {
+		file.println(item.first);
+		file.println(item.second);
+	}
+	file.close();
 }
 
 bool WiFiPicker::tryConnectToSsid(const char* ssid, const char* pass) {
-    WiFi.begin(ssid, pass);
+	WiFi.begin(ssid, pass);
 
-    while (true) {
-        delay(500);
+	while (true) {
+		delay(500);
 
-        switch (WiFi.status()) {
-            case WL_CONNECTED: {
-                    Serial.println("Connected!");
-                    return true;
-                }
-            case WL_NO_SHIELD: {
-                    Serial.println("No wifi shield.");
-                    return false;
-                }
-            case WL_NO_SSID_AVAIL: {
-                    Serial.println("No SSID available.");
-                    return false;
-                }
-            case WL_CONNECT_FAILED: {
-                    Serial.println("Connect failed.");
-                    return false;
-                }
-            case WL_CONNECTION_LOST: {
-                    Serial.println("Connect lost.");
-                    return false;
-                }
-            case WL_DISCONNECTED: {
-                    continue;
-                }
-            default: {
-                    Serial.println("Default case.");
-                    continue;
-                }
-        }
-    }
+		switch (WiFi.status()) {
+		case WL_CONNECTED: {
+			Serial.println("Connected!");
+			return true;
+		}
+		case WL_NO_SHIELD: {
+			Serial.println("No wifi shield.");
+			return false;
+		}
+		case WL_NO_SSID_AVAIL: {
+			Serial.println("No SSID available.");
+			return false;
+		}
+		case WL_CONNECT_FAILED: {
+			Serial.println("Connect failed.");
+			return false;
+		}
+		case WL_CONNECTION_LOST: {
+			Serial.println("Connect lost.");
+			return false;
+		}
+		case WL_DISCONNECTED: {
+			continue;
+		}
+		default: {
+			Serial.println("Default case.");
+			continue;
+		}
+		}
+	}
 }
 
 bool WiFiPicker::tryConnect() {
-    readConfig();
+	readConfig();
 
-    for (auto const item : _ssids) {
-        String ssid = item.first;
-        String pass = item.second;
-        Serial.println("Trying \"" + ssid + "\" : \"" + pass + "\"");
+	for (auto const item : _ssids) {
+		String ssid = item.first;
+		String pass = item.second;
+		Serial.println("Trying \"" + ssid + "\" : \"" + pass + "\"");
 
-        if (tryConnectToSsid(ssid.c_str(), pass.c_str())) {
-            return true;
-        }
-    }
+		if (tryConnectToSsid(ssid.c_str(), pass.c_str())) {
+			return true;
+		}
+	}
 
-    return false;
+	return false;
 }
 
 void WiFiPicker::reset() {
-    SPIFFS.remove(configFile);
-    _ssids = std::map<String, String>();
+	SPIFFS.remove(configFile);
+	_ssids = std::map<String, String>();
 }
 
 bool WiFiPicker::redirectoToIp() {
-    if (server->hostHeader() == WiFi.softAPIP().toString()) {
-        return false;
-    }
+	if (server->hostHeader() == WiFi.softAPIP().toString()) {
+		return false;
+	}
 
-    server->sendHeader("Location", "http://" + WiFi.softAPIP().toString(), true);
-    server->send(302, "text/plain", "");
-    server->client().stop();
-    return true;
+	server->sendHeader("Location", "http://" + WiFi.softAPIP().toString(), true);
+	server->send(302, "text/plain", "");
+	server->client().stop();
+	return true;
 }
 
 void WiFiPicker::addSsid(String ssid) {
-    addSsid(ssid, "");
+	addSsid(ssid, "");
 }
 
 void WiFiPicker::addSsid(String ssid, String pass) {
 	_ssids[ssid] = pass;
-    writeConfig();
+	writeConfig();
 }
 
 void WiFiPicker::removeSsid(String ssid, String password) {
-    for (std::map<String, String>::iterator it = _ssids.begin(); it != _ssids.end(); it++) {
-        if (it->first == ssid && it->second == password) {
+	for (std::map<String, String>::iterator it = _ssids.begin(); it != _ssids.end(); it++) {
+		if (it->first == ssid && it->second == password) {
 			_ssids.erase(it);
-            writeConfig();
-            return;
-        }
-    }
+			writeConfig();
+			return;
+		}
+	}
 }
 
 void WiFiPicker::handleRoot() {
-    if (redirectoToIp()) {
-        return;
-    }
+	if (redirectoToIp()) {
+		return;
+	}
 
-    String result = beginHtml;
-    for (auto const item : _ssids) {
-        result += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
-    }
+	String result = beginHtml;
+	for (auto const item : _ssids) {
+		result += "<tr><td><button onclick=\"location.href='/remove?ssid=' + escape('" + item.first + "') + '&pass=' + escape('" + item.second + "') \">&times;</button></td><td>" + item.first + "</td><td>-</td><td>" + item.second + "</td></tr>";
+	}
 
-    result += endHtml;
+	result += endHtml;
 
-    server->send(200, "text/html", result);
+	server->send(200, "text/html", result);
 }
 
 void WiFiPicker::handleAdd() {
-    server->send(200, "text/html", "The ESP will now reboot.");
-    String ssid = server->arg("ssid");
-    String pass = server->arg("pass");
+	server->send(200, "text/html", "The ESP will now reboot.");
+	String ssid = server->arg("ssid");
+	String pass = server->arg("pass");
 
-    Serial.println("SSID: " + ssid + " | PASS: " + pass);
+	Serial.println("SSID: " + ssid + " | PASS: " + pass);
 
-    addSsid(ssid, pass);
+	addSsid(ssid, pass);
 
-    delay(500);
+	delay(500);
 
-    ESP.restart();
+	ESP.restart();
 }
 
 void WiFiPicker::handleRemove() {
-    String ssid = server->arg("ssid");
-    String pass = server->arg("pass");
-    removeSsid(ssid, pass);
-    handleRoot();
+	String ssid = server->arg("ssid");
+	String pass = server->arg("pass");
+	removeSsid(ssid, pass);
+	handleRoot();
 }
 
 void WiFiPicker::createAP() {
-    Serial.println("Creating AP.");
-    server = std::unique_ptr<ESP8266WebServer>(new ESP8266WebServer(80));
+	Serial.println("Creating AP.");
+	server = std::unique_ptr<ESP8266WebServer>(new ESP8266WebServer(80));
 
-    DNSServer dnsServer;
+	DNSServer dnsServer;
 
-    WiFi.mode(WIFI_AP);
+	WiFi.mode(WIFI_AP);
 
-    if (_pass == "") {
-        WiFi.softAP(_ssid.c_str());
-    }
-    else {
-        WiFi.softAP(_ssid.c_str(), _pass.c_str(), 1, _hidden);
-    }
+	if (_pass == "") {
+		WiFi.softAP(_ssid.c_str());
+	}
+	else {
+		WiFi.softAP(_ssid.c_str(), _pass.c_str(), 1, _hidden);
+	}
 
-    IPAddress myIP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(myIP);
+	IPAddress myIP = WiFi.softAPIP();
+	Serial.print("AP IP address: ");
+	Serial.println(myIP);
 
-    dnsServer.start(53, "*", myIP);
+	dnsServer.start(53, "*", myIP);
 
-    server->on("/add", std::bind(&WiFiPicker::handleAdd, this));
-    server->on("/remove", std::bind(&WiFiPicker::handleRemove, this));
-    server->onNotFound(std::bind(&WiFiPicker::handleRoot, this));
+	server->on("/add", std::bind(&WiFiPicker::handleAdd, this));
+	server->on("/remove", std::bind(&WiFiPicker::handleRemove, this));
+	server->onNotFound(std::bind(&WiFiPicker::handleRoot, this));
 
-    server->begin();
-    Serial.println("HTTP server started");
+	server->begin();
+	Serial.println("HTTP server started");
 
-    while (true) {
-        dnsServer.processNextRequest();
-        server->handleClient();
-    }
+	while (true) {
+		dnsServer.processNextRequest();
+		server->handleClient();
+	}
 }
