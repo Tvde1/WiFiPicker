@@ -18,7 +18,7 @@ WiFiPicker wifiPicker;
 void setup() {
   Serial.begin(115200);
   
-  wifiPicker.connect();
+  wifiPicker.start();
 	
   Serial.print("Connected! Ip: ");
   Serial.println(WiFi.localIP());
